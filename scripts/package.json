@@ -1,0 +1,15 @@
+{
+  "name": "me-ws-bridge",
+  "version": "1.0.0",
+  "private": true,
+  
+  "dependencies": {
+    "ws": "^8.13.0"
+  }
+  ,
+  "scripts": {
+    "bridge": "node ws_bridge.js",
+    "client": "node ws_client.js",
+    "demo": "powershell -NoProfile -ExecutionPolicy Bypass -File run_demo.ps1"
+  }
+}

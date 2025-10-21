@@ -1,0 +1,112 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 8940c7c9190f86c4064c05b532dccc4cb35478a5423f44df7fa53042d3ccfccd
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 14d69ee8ae415ee2b751006dd00856e2a9c9218969fd12d8f0c3b285ccccee06
+Status: install ok installed
+
+Package: vcpkg-boost
+Version: 2025-03-29
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 9639f4b99c310adfd2bbbc8d5585948d81e822328fe4d18674b5c33a5ad5e41e
+Status: install ok installed
+
+Package: boost-uninstall
+Version: 1.89.0
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 5f1dd1bc58f1f4de24f7c03bd80bce23519f3883fbfb39984ff577acfb86ef97
+Description: Internal vcpkg port used to uninstall Boost
+Status: install ok installed
+
+Package: boost-cmake
+Version: 1.89.0
+Depends: boost-uninstall, vcpkg-boost
+Architecture: x64-windows
+Multi-Arch: same
+Abi: b7d880911107e722ad75534bdeae8213f35c7359ddb50cc07895655f08d2985a
+Description: Boost cmake module
+Status: install ok installed
+
+Package: boost-headers
+Version: 1.89.0
+Depends: boost-cmake
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 46264ef53b36ea1b21b1665980eab5d7b1d22dcce5793fbee43a28cde383d249
+Description: Boost headers module
+Status: install ok installed
+
+Package: boost-config
+Version: 1.89.0
+Depends: boost-cmake, boost-headers
+Architecture: x64-windows
+Multi-Arch: same
+Abi: ee06eb8a730407fe40e87e6ca5fc705152d00fe1fce950dee37f507bc76f169a
+Description: Boost config module
+Status: install ok installed
+
+Package: boost-static-assert
+Version: 1.89.0
+Depends: boost-cmake, boost-config, boost-headers
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 9ebeffc61ba22ce452554c6b8d91b12b6f2f85d7c8e0877791cb2a0601005525
+Description: Boost static_assert module
+Status: install ok installed
+
+Package: boost-type-traits
+Version: 1.89.0
+Depends: boost-cmake, boost-config, boost-headers, boost-static-assert
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 995be54b40f729ea4448380c545c90dfdab65b5028f9771b317e7cba2c4f52a6
+Description: Boost type_traits module
+Status: install ok installed
+
+Package: boost-assert
+Version: 1.89.0
+Depends: boost-cmake, boost-config, boost-headers
+Architecture: x64-windows
+Multi-Arch: same
+Abi: cfd862f362ac8b24896026b43bb74aac811dc81f18a6a3783a61f72c5f3282e2
+Description: Boost assert module
+Status: install ok installed
+
+Package: boost-throw-exception
+Version: 1.89.0
+Depends: boost-assert, boost-cmake, boost-config, boost-headers
+Architecture: x64-windows
+Multi-Arch: same
+Abi: f097378c0186488d7f2d576560f43ebcff947f0b0756bd31f9c058e7bc490a95
+Description: Boost throw_exception module
+Status: install ok installed
+
+Package: boost-uuid
+Version: 1.89.0
+Depends: boost-assert, boost-cmake, boost-config, boost-headers, boost-throw-exception, boost-type-traits
+Architecture: x64-windows
+Multi-Arch: same
+Abi: cacc121f9c1e0b19893a8071cb94cb29970318225baf1fcee4704b435b433503
+Description: Boost uuid module
+Status: install ok installed
+
+Package: nlohmann-json
+Version: 3.12.0
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 3d02bce9fc7c2973e8d3af80554f621318825ed145e47c1d88d6f7cb39b145ef
+Description: JSON for Modern C++
+Status: install ok installed
+
