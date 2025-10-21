@@ -86,6 +86,15 @@ There are two supported ways to get real-time push (trades/BBO):
 
 The C++ build will compile a small "stub" broadcaster when websocketpp is not available; this keeps the server functional (REST + long-poll) while deferring WebSocket push to the Node bridge.
 
+Security note about pushing to GitHub
+-----------------------------------
+
+- If you pasted a Personal Access Token (PAT) into chat or any public place, revoke it immediately at https://github.com/settings/tokens and create a new one if needed.
+- Recommended push methods:
+	- SSH (recommended): add your public key at https://github.com/settings/ssh/new and run `.\scripts\push_to_github.ps1` from the project root.
+	- HTTPS + Git Credential Manager: install GCM and run `.\scripts\push_to_github_https.ps1` (GCM will prompt for credentials securely).
+	- One-time PAT push (if you must): run `.\scripts\push_with_pat.ps1` and enter your username and PAT when prompted. Do not paste PATs in chat.
+
 Quick run (Node bridge)
 ------------------------
 

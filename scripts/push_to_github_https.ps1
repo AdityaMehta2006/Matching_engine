@@ -26,8 +26,16 @@ if (-not $inside) { Write-Host "Initializing git repo..."; & git init; if ($LAST
 
 # stage & commit
 & git add -A; if ($LASTEXITCODE -ne 0) { Fail "git add failed" }
+# stage & commit
+& git add -A
+if ($LASTEXITCODE -ne 0) { Fail "git add failed" }
 $diff = (& git diff --cached --name-only) 2>$null
-if ($diff) { & git commit -m "$CommitMessage"; if ($LASTEXITCODE -ne 0) { Fail "git commit failed" } } else { Write-Host "No changes to commit." }
+if ($diff) {
+    & git commit -m "$CommitMessage"
+    if ($LASTEXITCODE -ne 0) { Fail "git commit failed" }
+} else {
+    Write-Host "No changes to commit."
+}
 
 # remote
 $existing = $null

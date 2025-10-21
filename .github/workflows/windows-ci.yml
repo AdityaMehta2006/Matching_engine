@@ -1,0 +1,39 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    # allow manually running integration_test via workflow_dispatch inputs
+    if: ${{ github.event_name != 'workflow_dispatch' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run-integration == 'true')) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up vcpkg (optional)
+        run: |
+          if (Test-Path ./vcpkg) { Write-Host 'Using repo vcpkg'; ./vcpkg/bootstrap-vcpkg.bat; } else { Write-Host 'Skipping vcpkg step (not present)'; }
+        shell: powershell
+      - name: Configure CMake
+        run: |
+          if (Test-Path ./vcpkg) {
+            $toolchain = Resolve-Path ./vcpkg/scripts/buildsystems/vcpkg.cmake
+            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=$toolchain
+          } else {
+            cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+          }
+      - name: Build
+        run: |
+          cmake --build build --config Debug -- /m
+      - name: Optionally run integration_test
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run-integration == 'true' }}
+        run: |
+          cmake --build build --config Debug --target integration_test
+        shell: powershell
+      - name: Run tests
+        run: |
+          ctest --test-dir build -C Debug --output-on-failure
+        shell: powershell

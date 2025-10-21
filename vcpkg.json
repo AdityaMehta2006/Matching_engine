@@ -1,4 +1,15 @@
 {
+  "name": "matching_engine_cpp",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "nlohmann-json",
+    "websocketpp",
+    "asio",
+    "boost-uuid",
+    "catch2"
+  ]
+}
+{
   "name": "matching-engine-cpp",
   "version": "0.1.0",
   "dependencies": [

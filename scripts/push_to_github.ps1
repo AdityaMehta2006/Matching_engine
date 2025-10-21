@@ -41,8 +41,6 @@ if (-not $inside) {
 # show status
 Write-Host "Git status (porcelain):"
 & git status --porcelain
-
-git add -A || Fail "git add failed"
 # stage everything
 & git add -A
 if ($LASTEXITCODE -ne 0) { Fail "git add failed (exit code $LASTEXITCODE)" }

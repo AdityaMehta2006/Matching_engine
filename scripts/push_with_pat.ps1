@@ -61,7 +61,7 @@ $tempUrl = $RemoteUrl -replace '^https://', "https://$encUser`:$encPAT@"
 if ($orig) {
     Write-Host "Temporarily overwriting origin to use PAT (will be restored)"
     & git remote set-url origin $tempUrl
-    if ($LASTEXITCODE -ne 0) { Fail "Failed to set temporary origin URL" }
+    if ($LASTEXITCODE -ne 0) { Fail "Failed to set temporary origin URL (exit code $LASTEXITCODE)" }
 } else {
     Write-Host "Adding origin with PAT (will be removed after push)"
     & git remote add origin $tempUrl
@@ -82,6 +82,7 @@ $pushExit = $LASTEXITCODE
 if ($orig) {
     Write-Host "Restoring original origin URL"
     & git remote set-url origin $orig
+    if ($LASTEXITCODE -ne 0) { Write-Warning "Failed to restore original origin URL (exit code $LASTEXITCODE)" }
 } else {
     Write-Host "Removing temporary origin remote"
     & git remote remove origin
@@ -89,7 +90,7 @@ if ($orig) {
 
 # clear sensitive variables
 $pat = $null
-$securePAT.Dispose()
+try { $null = $securePAT } catch { }
 
 if ($pushExit -ne 0) { Fail "git push failed (exit code $pushExit)" }
 

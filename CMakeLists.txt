@@ -4,6 +4,10 @@ project(matching_engine_cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Option to force native websocketpp or force stub broadcaster for testing
+option(FORCE_NATIVE_WEBSOCKET "Force building native websocketpp-based broadcaster" OFF)
+option(FORCE_STUB_WEBSOCKET "Force building stub websocket broadcaster" OFF)
+
 # library
 add_library(matching_engine
     src/Order.cpp
@@ -84,12 +88,26 @@ add_executable(me_server src/server.cpp)
 # header tree). Instead build a lightweight stub so the server still builds and
 # the project can use the Node bridge as a fallback.
 find_path(WEBSOCKETPP_SYSTEM_INCLUDE websocketpp/server.hpp)
-if(WEBSOCKETPP_SYSTEM_INCLUDE)
-  message(STATUS "Found websocketpp headers in system includes: ${WEBSOCKETPP_SYSTEM_INCLUDE}")
-  target_sources(me_server PRIVATE src/ws_broadcaster.cpp)
-else()
-  message(STATUS "websocketpp not found in system includes; building stub broadcaster (no-op)")
+# choose which broadcaster to build
+if(FORCE_STUB_WEBSOCKET)
+  message(STATUS "FORCE_STUB_WEBSOCKET=ON: building stub broadcaster")
   target_sources(me_server PRIVATE src/ws_broadcaster_stub.cpp)
+elseif(FORCE_NATIVE_WEBSOCKET)
+  if(WEBSOCKETPP_SYSTEM_INCLUDE)
+    message(STATUS "FORCE_NATIVE_WEBSOCKET=ON and system websocketpp found: building native broadcaster")
+    target_sources(me_server PRIVATE src/ws_broadcaster.cpp)
+  else()
+    message(STATUS "FORCE_NATIVE_WEBSOCKET=ON but websocketpp headers not found; attempting FetchContent fallback")
+    target_sources(me_server PRIVATE src/ws_broadcaster.cpp)
+  endif()
+else()
+  if(WEBSOCKETPP_SYSTEM_INCLUDE)
+    message(STATUS "Found websocketpp headers in system includes: ${WEBSOCKETPP_SYSTEM_INCLUDE}")
+    target_sources(me_server PRIVATE src/ws_broadcaster.cpp)
+  else()
+    message(STATUS "websocketpp not found in system includes; building stub broadcaster (no-op)")
+    target_sources(me_server PRIVATE src/ws_broadcaster_stub.cpp)
+  endif()
 endif()
 
 target_include_directories(me_server PRIVATE ${CMAKE_BINARY_DIR}/third_party)
@@ -113,25 +131,36 @@ endif()
 # Ensure matching_engine can include third_party headers (for json when vendored)
 target_include_directories(matching_engine PUBLIC ${CMAKE_BINARY_DIR}/third_party)
 
-# WebSocket++ (header-only) + standalone Asio single-header fallback
-set(WEBSOCKETPP_HEADER_DIR ${CMAKE_BINARY_DIR}/third_party/websocketpp)
-set(ASIO_HEADER ${CMAKE_BINARY_DIR}/third_party/asio.hpp)
-if(NOT EXISTS ${WEBSOCKETPP_HEADER_DIR}/websocketpp)
-  file(MAKE_DIRECTORY ${WEBSOCKETPP_HEADER_DIR})
-  message(STATUS "Downloading websocketpp headers to ${WEBSOCKETPP_HEADER_DIR}")
-  file(DOWNLOAD "https://raw.githubusercontent.com/zaphoyd/websocketpp/master/websocketpp/logger/levels.hpp" ${WEBSOCKETPP_HEADER_DIR}/logger_levels.hpp SHOW_PROGRESS STATUS _dl_status)
-  # Instead of downloading entire websocketpp repo, get the packaged single-folder via zip is complex; try to download core headers used below
-  file(DOWNLOAD "https://raw.githubusercontent.com/zaphoyd/websocketpp/master/websocketpp/config/asio_no_tls.hpp" ${WEBSOCKETPP_HEADER_DIR}/config_asio_no_tls.hpp SHOW_PROGRESS STATUS _dl_status2)
-  file(DOWNLOAD "https://raw.githubusercontent.com/zaphoyd/websocketpp/master/websocketpp/server.hpp" ${WEBSOCKETPP_HEADER_DIR}/server.hpp SHOW_PROGRESS STATUS _dl_status3)
-  file(DOWNLOAD "https://raw.githubusercontent.com/zaphoyd/websocketpp/master/websocketpp/connection.hpp" ${WEBSOCKETPP_HEADER_DIR}/connection.hpp SHOW_PROGRESS STATUS _dl_status4)
-endif()
-if(NOT EXISTS ${ASIO_HEADER})
-  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/third_party)
-  message(STATUS "Downloading standalone Asio single-header to ${ASIO_HEADER}")
-  file(DOWNLOAD "https://raw.githubusercontent.com/chriskohlhoff/asio/asio-1-24-1/include/asio.hpp" ${ASIO_HEADER} SHOW_PROGRESS STATUS _dl_status5)
+# WebSocket++ + Asio: prefer system headers, otherwise fetch the source via FetchContent so native WS can be enabled automatically.
+include(FetchContent)
+find_path(WEBSOCKETPP_SYSTEM_INCLUDE websocketpp/server.hpp)
+if(WEBSOCKETPP_SYSTEM_INCLUDE)
+  message(STATUS "Found websocketpp headers in system includes: ${WEBSOCKETPP_SYSTEM_INCLUDE}")
+  set(WEBSOCKETPP_INCLUDE_DIR ${WEBSOCKETPP_SYSTEM_INCLUDE})
+else()
+  message(STATUS "websocketpp not found in system includes; fetching websocketpp and asio via FetchContent into third_party")
+  FetchContent_Declare(
+    websocketpp
+    GIT_REPOSITORY https://github.com/zaphoyd/websocketpp.git
+    GIT_TAG master
+  )
+  FetchContent_Declare(
+    asio
+    GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+    GIT_TAG asio-1-24-1
+  )
+  FetchContent_MakeAvailable(websocketpp asio)
+  if(TARGET websocketpp)
+    # some versions may add targets; prefer source dir include
+    set(WEBSOCKETPP_INCLUDE_DIR ${websocketpp_SOURCE_DIR})
+  else()
+    set(WEBSOCKETPP_INCLUDE_DIR ${websocketpp_SOURCE_DIR})
+  endif()
+  # asio headers will be available under ${asio_SOURCE_DIR}/asio/include or top-level include
+  set(ASIO_INCLUDE_DIR ${asio_SOURCE_DIR}/asio/include)
 endif()
 
-target_include_directories(me_server PRIVATE ${WEBSOCKETPP_HEADER_DIR} ${CMAKE_BINARY_DIR}/third_party)
+target_include_directories(me_server PRIVATE ${WEBSOCKETPP_INCLUDE_DIR} ${ASIO_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/third_party)
 
 # Integration test target (runs a PowerShell script that starts the server, posts orders, then shuts it down)
 add_custom_target(integration_test
